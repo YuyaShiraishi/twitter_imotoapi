@@ -1,6 +1,6 @@
 import schedule
 import functools
-import modules.twitter
+from modules import twitter
 
 def setup_schedule(oauth):
     # スケジュール
