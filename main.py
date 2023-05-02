@@ -1,16 +1,24 @@
+#!/usr/bin/python3
+
 import argparse
 import os
-
+from os.path import (
+    dirname,
+    abspath,
+    join,
+)
 import logging
 from logging.handlers import RotatingFileHandler
 
 from modules import gpt, news, twitter
 
+script_dir = dirname(abspath(__file__))
+
 # ログの定義
 logger = logging.getLogger(__name__)
 formatter = formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+log_file = join(script_dir, 'logs', 'error.log')
 
-log_file = './logs/error.log'
 file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024, backupCount=10)
 file_handler.setFormatter(formatter)
 
@@ -29,9 +37,9 @@ def main():
     args = parser.parse_args()
 
     # ニュース要約ツイートをする場合はpromptを書き換える
-    if args.prompt == '本日のニュース':
+    if args.prompt == '今日のニュース':
         try:
-            with open('prompt/news_summary.txt', 'r', encoding='utf-8') as f:
+            with open(join(script_dir, 'prompt', 'news_summary.txt'), 'r', encoding='utf-8') as f:
                 args.prompt = f.read() + news.fetch()
         except Exception as e:
             logger.exception('News API error occurred.')

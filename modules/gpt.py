@@ -1,18 +1,25 @@
 import openai
 import os
 import configparser
+from os.path import (
+    dirname,
+    abspath,
+    join,
+)
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
+script_dir = dirname(abspath(__file__))
+
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read(join(script_dir, '..', 'config.ini'))
 
 model = config.get('openai', 'model')
 temperature = float(config.get('openai', 'temperature'))
 
 def generate_text(prompt):
     try:
-        with open('prompt/restriction.txt', 'r', encoding='utf-8') as f:
+        with open(join(script_dir, '..', 'prompt', 'restriction.txt'), 'r', encoding='utf-8') as f:
             restriction = f.read()
     except Exception as e:
         raise e

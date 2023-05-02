@@ -1,12 +1,18 @@
 from newsapi import NewsApiClient
+from os.path import (
+    dirname,
+    abspath,
+    join,
+)
 import random
 import os
 import configparser
 
 api_key = os.environ["NEWS_API_KEY"]
+script_dir = dirname(abspath(__file__))
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read(join(script_dir, '..', 'config.ini'))
 
 language = config.get('newsapi', 'language')
 sort_by = config.get('newsapi', 'sort_by')
@@ -16,7 +22,7 @@ def fetch(filename='topics.txt'):
     newsapi = NewsApiClient(api_key=api_key)
 
     try:
-        with open(filename, 'r', encoding='utf-8') as f:
+        with open(join(script_dir, '..', filename), 'r', encoding='utf-8') as f:
             topics = f.read().splitlines()
     except Exception as e:
         raise e

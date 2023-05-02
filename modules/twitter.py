@@ -1,15 +1,22 @@
 import os
+from os.path import (
+    dirname,
+    abspath,
+    join,
+)
 import json
 from requests_oauthlib import OAuth1Session
 
 import logging
 from logging.handlers import RotatingFileHandler
 
+script_dir = dirname(abspath(__file__))
+
 logger = logging.getLogger(__name__)
 formatter = formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 # ログファイルのハンドラを作成する
-log_file = './logs/tweet.log'
+log_file = join(script_dir, '..', 'tweet.log')
 file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024, backupCount=10)
 file_handler.setFormatter(formatter)
 
@@ -21,17 +28,20 @@ logger.setLevel(logging.DEBUG)
 
 
 def tweet(tweet_text):
-    consumer_key = os.environ.get("CONSUMER_KEY")
-    consumer_secret = os.environ.get("CONSUMER_SECRET")
-    access_token = os.environ.get('ACCESS_TOKEN')
-    access_token_secret = os.environ.get('ACCESS_TOKEN_SECRET')
+    try:
+        consumer_key = os.environ.get("CONSUMER_KEY")
+        consumer_secret = os.environ.get("CONSUMER_SECRET")
+        access_token = os.environ.get('ACCESS_TOKEN')
+        access_token_secret = os.environ.get('ACCESS_TOKEN_SECRET')
 
-    oauth = OAuth1Session(
-        consumer_key,
-        consumer_secret,
-        access_token,
-        access_token_secret,
-    )
+        oauth = OAuth1Session(
+            consumer_key,
+            consumer_secret,
+            access_token,
+            access_token_secret,
+        )
+    except Exception as e:
+        raise e
 
     payload = {"text": tweet_text}
 
