@@ -1,4 +1,3 @@
 openai
 newsapi-python
-schedule
 requests_oauthlib

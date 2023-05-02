@@ -15,17 +15,23 @@ page_size = int(config.get('newsapi', 'page_size'))
 def fetch(filename='topics.txt'):
     newsapi = NewsApiClient(api_key=api_key)
 
-    with open(filename, 'r', encoding='utf-8') as f:
-        topics = f.read().splitlines()
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            topics = f.read().splitlines()
+    except Exception as e:
+        raise e
 
     query = random.choice(topics)
 
-    articles = newsapi.get_everything(q=query,
+    try:
+        articles = newsapi.get_everything(q=query,
                                       language=language,
                                       sort_by=sort_by,
                                       page_size=page_size)
+    except Exception as e:
+        raise e
 
-    news_text = ""
+    news_text = ''
     for i, article in enumerate(articles['articles']):
         news_text += f"{i + 1}. {article['title']} - {article['source']['name']}\n"
         news_text += f"URL: {article['url']}\n"

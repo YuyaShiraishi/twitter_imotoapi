@@ -1,25 +1,63 @@
-from requests_oauthlib import OAuth1Session
+import argparse
 import os
-import json
-import schedule
-import time
 
-from tweet_schedule import setup_schedule
-from modules import twitter
+import logging
+from logging.handlers import RotatingFileHandler
 
-consumer_key = os.environ.get("CONSUMER_KEY")
-consumer_secret = os.environ.get("CONSUMER_SECRET")
+from modules import gpt, news, twitter
 
-access_token, access_token_secret = twitter.getToken()
-oauth = OAuth1Session(
-    consumer_key,
-    client_secret=consumer_secret,
-    resource_owner_key=access_token,
-    resource_owner_secret=access_token_secret,
-)
+# ログの定義
+logger = logging.getLogger(__name__)
+formatter = formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-setup_schedule(oauth)
+log_file = './logs/error.log'
+file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024, backupCount=10)
+file_handler.setFormatter(formatter)
 
-while True:
-    schedule.run_pending()
-    time.sleep(20)
+logger.addHandler(file_handler)
+logger.setLevel(logging.ERROR)
+
+# グローバル変数
+error_msg = 'お兄ちゃん、ごめんね。ちょっと今、うまくツイートできなかったみたい。少し待ってね。頑張って情報をお届けするから！(๑•̀ㅂ•́)و✧'
+tags = ' #AI妹'
+
+
+def main():
+    # 引数の定義
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--prompt', help='入力プロンプト', default='お兄ちゃんが楽しくなる雑談をする')
+    args = parser.parse_args()
+
+    # ニュース要約ツイートをする場合はpromptを書き換える
+    if args.prompt == '本日のニュース':
+        try:
+            with open('prompt/news_summary.txt', 'r', encoding='utf-8') as f:
+                args.prompt = f.read() + news.fetch()
+        except Exception as e:
+            logger.exception('News API error occurred.')
+
+    # GPTによるツイート生成
+    try:
+        tweet_text = gpt.generate_text(args.prompt)
+    except Exception as e:
+        logger.exception('OpenAI API error occurred.')
+
+        # エラーでGPTが文章を生成できなかったときの代替メッセージを代入
+        tweet_text = error_msg
+
+    # タグの挿入
+    tweet_text = tweet_text + tags
+
+    # 140字以上になっていたら切り詰める
+    if len(tweet_text) >= 140:
+        tweet_text = tweet_text[:139]
+
+    # ツイートする
+    try:
+        twitter.tweet(tweet_text)
+    except Exception as e:
+        logger.exception('Twitter API error occurred')
+
+
+if __name__ == "__main__":
+    main()

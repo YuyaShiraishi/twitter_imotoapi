@@ -1,74 +1,53 @@
-# システムモジュール
-from requests_oauthlib import OAuth1Session
-import functools
 import os
 import json
-import schedule
-import time
-import random
-import string
+from requests_oauthlib import OAuth1Session
 
-# ユーザ定義モジュール
-import modules.news
-import modules.gpt
+import logging
+from logging.handlers import RotatingFileHandler
 
-# Twitter API Keyは環境変数に登録
-consumer_key = os.environ.get("CONSUMER_KEY")
-consumer_secret = os.environ.get("CONSUMER_SECRET")
+logger = logging.getLogger(__name__)
+formatter = formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-def getToken():
-    # Get request token
-    request_token_url = "https://api.twitter.com/oauth/request_token?oauth_callback=oob&x_auth_access_type=write"
-    oauth = OAuth1Session(consumer_key, client_secret=consumer_secret)
+# ログファイルのハンドラを作成する
+log_file = './logs/tweet.log'
+file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024, backupCount=10)
+file_handler.setFormatter(formatter)
 
-    try:
-        fetch_response = oauth.fetch_request_token(request_token_url)
-    except ValueError:
-        print(
-            "There may have been an issue with the consumer_key or consumer_secret you entered."
-        )
+# ロガーにハンドラを設定する
+logger.addHandler(file_handler)
 
-    resource_owner_key = fetch_response.get("oauth_token")
-    resource_owner_secret = fetch_response.get("oauth_token_secret")
-    print("Got OAuth token: %s" % resource_owner_key)
+# ログの情報レベルを設定する
+logger.setLevel(logging.DEBUG)
 
-    # Get authorization
-    base_authorization_url = "https://api.twitter.com/oauth/authorize"
-    authorization_url = oauth.authorization_url(base_authorization_url)
-    print("Please go here and authorize: %s" % authorization_url)
-    verifier = input("Paste the PIN here: ")
 
-    # Get the access token
-    access_token_url = "https://api.twitter.com/oauth/access_token"
+def tweet(tweet_text):
+    consumer_key = os.environ.get("CONSUMER_KEY")
+    consumer_secret = os.environ.get("CONSUMER_SECRET")
+    access_token = os.environ.get('ACCESS_TOKEN')
+    access_token_secret = os.environ.get('ACCESS_TOKEN_SECRET')
+
     oauth = OAuth1Session(
         consumer_key,
-        client_secret=consumer_secret,
-        resource_owner_key=resource_owner_key,
-        resource_owner_secret=resource_owner_secret,
-        verifier=verifier,
+        consumer_secret,
+        access_token,
+        access_token_secret,
     )
-    oauth_tokens = oauth.fetch_access_token(access_token_url)
 
-    return oauth_tokens["oauth_token"], oauth_tokens["oauth_token_secret"]
+    payload = {"text": tweet_text}
 
-def tweet(oatuh):
-    sentence = gpt.generate_text(news.fetch())
-
-    payload = {"text": sentence}
-
-    response = oauth.post(
-        "https://api.twitter.com/2/tweets",
-        json=payload,
-    )
+    try:
+        response = oauth.post(
+            "https://api.twitter.com/2/tweets",
+            json=payload,
+        )
+    except Exception as e:
+        raise e
 
     if response.status_code != 201:
-        raise Exception(
+        raise ValueError(
             "Request returned an error: {} {}".format(response.status_code, response.text)
         )
 
-    print("Response code: {}".format(response.status_code))
-
     # Saving the response as JSON
     json_response = response.json()
-    print(json.dumps(json_response, indent=4, sort_keys=True))
-
+    logger.debug(json.dumps(json_response, indent=4, sort_keys=True))
