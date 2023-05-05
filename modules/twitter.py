@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 formatter = formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 # ログファイルのハンドラを作成する
-log_file = join(script_dir, '..', 'tweet.log')
+log_file = join(script_dir, '..', 'logs', 'tweet.log')
 file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024, backupCount=10)
 file_handler.setFormatter(formatter)
 
