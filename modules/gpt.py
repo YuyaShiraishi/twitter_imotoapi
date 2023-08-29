@@ -30,10 +30,6 @@ def generate_text(prompt):
             messages=[
                 {
                     "role": "system",
-                    "content": "100文字以内で回答する"
-                },
-                {
-                    "role": "user",
                     "content": restriction
                 },
                 {

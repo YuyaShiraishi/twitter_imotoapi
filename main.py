@@ -9,6 +9,7 @@ from os.path import (
 )
 import logging
 from logging.handlers import RotatingFileHandler
+import random
 
 from modules import gpt, news, twitter
 
@@ -36,11 +37,19 @@ def main():
     parser.add_argument('-p', '--prompt', help='入力プロンプト', default='お兄ちゃんが楽しくなる雑談をする')
     args = parser.parse_args()
 
+    # ニュースのトピックについてランダムに選択
+    try:
+        with open(join(script_dir, 'topics.txt'), 'r', encoding='utf-8') as f:
+            topics = f.read().splitlines()
+            query = random.choice(topics)
+    except Exception as e:
+        raise e
+
     # ニュース要約ツイートをする場合はpromptを書き換える
     if args.prompt == '今日のニュース':
         try:
             with open(join(script_dir, 'prompt', 'news_summary.txt'), 'r', encoding='utf-8') as f:
-                args.prompt = f.read() + news.fetch()
+                args.prompt = f.read() + news.fetch(query)
         except Exception as e:
             logger.exception('News API error occurred.')
 

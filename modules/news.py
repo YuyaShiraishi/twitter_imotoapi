@@ -4,7 +4,6 @@ from os.path import (
     abspath,
     join,
 )
-import random
 import os
 import configparser
 
@@ -16,18 +15,9 @@ config.read(join(script_dir, '..', 'config.ini'))
 
 language = config.get('newsapi', 'language')
 sort_by = config.get('newsapi', 'sort_by')
-page_size = int(config.get('newsapi', 'page_size'))
 
-def fetch(filename='topics.txt'):
+def fetch(query='ニュース', page_size=3):
     newsapi = NewsApiClient(api_key=api_key)
-
-    try:
-        with open(join(script_dir, '..', filename), 'r', encoding='utf-8') as f:
-            topics = f.read().splitlines()
-    except Exception as e:
-        raise e
-
-    query = random.choice(topics)
 
     try:
         articles = newsapi.get_everything(q=query,
