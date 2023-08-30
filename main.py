@@ -62,10 +62,7 @@ def main(args):
 
     # ツイートする
     try:
-        print(query)
-        print(prompt)
-        print(tweet_text)
-        #twitter.tweet(tweet_text)
+        twitter.tweet(tweet_text)
     except Exception as e:
         logger.exception('Twitter API error occurred')
 
