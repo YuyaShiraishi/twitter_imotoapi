@@ -8,6 +8,7 @@ from os.path import (
 )
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
+fine_tuned_model = openai.FineTuningJob.retrieve(os.environ["OPENAI_API_IMOTOAPI_JOBID"]).fine_tuned_model
 
 script_dir = dirname(abspath(__file__))
 
@@ -45,3 +46,21 @@ def generate_text(prompt):
 
     generated_text = response.choices[0].message.content
     return generated_text
+
+def generate_text_with_fine_tuned(prompt):
+    try:
+        response = openai.ChatCompletion.create(
+            model=fine_tuned_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+        )
+    except Exception as e:
+        raise e
+
+    generated_text = response.choices[0].message.content
+    return generated_text
+
